@@ -541,7 +541,7 @@ Shot.setExpiration = function(backend, shotId, deviceId, expiration) {
   } else if (expiration < 0) {
     throw new Error("Expiration less than zero");
   }
-  expiration = Math.round(expiration / 1000);
+  expiration = Math.floor(expiration / 1000);
   return db.update(
     `UPDATE data
      SET expire_time = NOW() + ($1 || ' SECONDS')::INTERVAL

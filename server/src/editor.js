@@ -1,6 +1,6 @@
 const React = require("react");
 
-let pos, context, editor, highlighter, highlightContext;
+let pos, context, editor, highlightContext;
 
 exports.Editor = class Editor extends React.Component {
   constructor(props) {
@@ -27,8 +27,9 @@ exports.Editor = class Editor extends React.Component {
         <button id="clear" onClick={this.onClickClear.bind(this)}>Clear</button>
       </div>
       <div className="main-container">
-        <img src={this.props.clip.image.url} style={{height: "auto", width: this.props.clip.image.dimensions.x + "px", maxWidth: "80%"}}/>
+        <img id="image" src={this.props.clip.image.url} style={{height: "auto", width: this.props.clip.image.dimensions.x + "px", maxWidth: "80%"}}/>
         <div className="canvas-container" id="canvas-container">
+          <canvas className="image-holder" id="image-holder" ref="image" height={ 2 * canvasHeight } width={ 2 * window.innerWidth } style={{height: canvasHeight, width: window.innerWidth}}></canvas>
           <canvas className="highlighter" id="highlighter" ref="highlighter" height={canvasHeight} width={window.innerWidth}></canvas>
           <canvas className="editor" id="editor" ref="editor" height={canvasHeight} width={window.innerWidth}></canvas>
         </div>
@@ -83,8 +84,16 @@ exports.Editor = class Editor extends React.Component {
   componentDidMount() {
     editor = document.getElementById("editor");
     context = this.refs.editor.getContext('2d');
-    highlighter = document.getElementById("highlighter");
     highlightContext = this.refs.highlighter.getContext('2d');
+    let imageCanvas = document.getElementById("image-holder");
+    let imageContext = this.refs.image.getContext('2d');
+    let img = document.getElementById("image");
+    let width = img.width;
+    let height = img.height;
+    // From https://blog.headspin.com/?p=464, we oversample the canvas for improved image quality
+    imageContext.scale(2, 2);
+    imageContext.drawImage(img, (imageCanvas.width / 4) - (width / 2), (imageCanvas.height / 4) - (height / 2), width, height);
+    img.style.display = 'none';
   }
 
   drawRectangle(e) {

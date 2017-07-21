@@ -4,9 +4,9 @@ const ReactDOM = require("react-dom");
 const { Footer } = require("../../footer-view");
 const sendEvent = require("../../browser-send-event.js");
 const { ShareButton } = require("../../share-buttons");
-const { Editor } = require("../../editor");
-const { TimeDiff, intervalDescription } = require("./time-diff");
+const { TimeDiff } = require("./time-diff");
 const reactruntime = require("../../reactruntime");
+const { Editor } = require("../../editor");
 
 class Clip extends React.Component {
   constructor(props) {

@@ -349,3 +349,12 @@ body {
   mix-blend-mode: multiply;
   z-index: 998;
 }
+
+.image-holder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  z-index: 997;
+}
+
