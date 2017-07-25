@@ -281,6 +281,13 @@ var conf = convict({
     default: "",
     env: "CDN",
     arg: "cdn"
+  },
+  disableAnnotations: {
+    doc: "if true, then disable shot annotations",
+    format: Boolean,
+    default: false,
+    env: "DISABLE_ANNOTATIONS",
+    arg: "disable-annotations"
   }
 });
 

@@ -1,6 +1,6 @@
 const React = require("react");
 
-let pos, context, editor, highlightContext;
+let pos, context, editor, highlightContext, highlighter, drawContext;
 
 exports.Editor = class Editor extends React.Component {
   constructor(props) {
@@ -16,7 +16,7 @@ exports.Editor = class Editor extends React.Component {
     let canvasHeight = document.body.scrollHeight - 100;
     return <div>
       <div className="editor-header">
-        <button id="highlighter" onClick={this.onClickHighlight.bind(this)}>highlighter</button>
+        <button id="highlight" onClick={this.onClickHighlight.bind(this)}>highlighter</button>
         <button id="pen" onClick={this.onClickPen.bind(this)}>Pen</button>
         <button id="text" onClick={this.onClickRectangle.bind(this)}>Rectangle</button>
         <button id="arrow" onClick={this.onClickArrow.bind(this)}>Arrows</button>
@@ -58,11 +58,18 @@ exports.Editor = class Editor extends React.Component {
   }
 
   onClickSave() {
+    this.imageContext.drawImage(editor, 0, 0);
+    this.imageContext.globalCompositeOperation = 'multiply';
+    this.imageContext.drawImage(highlighter, 0, 0);
+    editor.style.display = 'none';
+    highlighter.style.display = 'none';
+    let url = this.imageCanvas.toDataURL("image/png");
+    window.open(this.imageCanvas.toDataURL("image/png"));
   }
 
   onClickClear() {
     context.clearRect(0, 0, editor.width, editor.height);
-    highlightContext.clearRect(0, 0, editor.width, editor.height);
+    highlightContext.clearRect(0, 0, highlighter.width, highlighter.height);
   }
 
   onClickHighlight() {
@@ -84,15 +91,18 @@ exports.Editor = class Editor extends React.Component {
   componentDidMount() {
     editor = document.getElementById("editor");
     context = this.refs.editor.getContext('2d');
+    highlighter = document.getElementById("highlighter");
     highlightContext = this.refs.highlighter.getContext('2d');
     let imageCanvas = document.getElementById("image-holder");
+    this.imageCanvas = imageCanvas
     let imageContext = this.refs.image.getContext('2d');
+    this.imageContext = imageContext;
+    // From https://blog.headspin.com/?p=464, we oversample the canvas for improved image quality
     let img = document.getElementById("image");
     let width = img.width;
     let height = img.height;
-    // From https://blog.headspin.com/?p=464, we oversample the canvas for improved image quality
-    imageContext.scale(2, 2);
-    imageContext.drawImage(img, (imageCanvas.width / 4) - (width / 2), (imageCanvas.height / 4) - (height / 2), width, height);
+    this.imageContext.scale(2, 2);
+    this.imageContext.drawImage(img, (this.imageCanvas.width / 4) - (width / 2), (this.imageCanvas.height / 4) - (height / 2), width, height);
     img.style.display = 'none';
   }
 
@@ -109,14 +119,19 @@ exports.Editor = class Editor extends React.Component {
     if (this.state.tool == 'eraser') {
       context.globalCompositeOperation = 'destination-out';
       context.strokeStyle = 'rgba(255,0,0,0.5);';
+      drawContext = context;
+    } else if (this.state.tool == 'highlighter') {
+      highlightContext.lineWidth = 20;
+      highlightContext.strokeStyle = '#ff0';
+      drawContext = highlightContext;
     } else {
       context.strokeStyle = this.state.color;
       highlightContext.strokeStyle = this.state.color;
       context.globalCompositeOperation = 'source-over';
+      drawContext = context;
     }
     context.lineWidth = this.state.size;
     document.body.style.margin = 0;
-    window.addEventListener("resize", this.resize);
     if (this.state.tool == 'highlighter' || this.state.tool == 'pen' || this.state.tool == 'eraser') {
       document.querySelector("#canvas-container").addEventListener("mousemove", this.draw)
       document.querySelector("#canvas-container").addEventListener("mousedown", this.setPosition);
@@ -130,27 +145,6 @@ exports.Editor = class Editor extends React.Component {
       document.querySelector("#canvas-container").removeEventListener("mousemove", this.highlight);
       document.querySelector("#canvas-container").addEventListener("mousedown", this.drawRectangle);
     }
-    if (this.state.tool == 'highlighter') {
-      document.querySelector("#canvas-container").removeEventListener("mousemove", this.draw)
-      document.querySelector("#canvas-container").addEventListener("mousedown", this.setPosition);
-      document.querySelector("#canvas-container").addEventListener("mouseenter", this.setPosition);
-      document.querySelector("#canvas-container").addEventListener("mousemove", this.highlight);
-    }
-  }
-
-  highlight(e) {
-    if (e.buttons !== 1) return;
-    highlightContext.lineWidth = 20;
-    highlightContext.strokeStyle = 'yellow';
-    highlightContext.beginPath();
-    highlightContext.lineCap = 'round';
-    highlightContext.moveTo(pos.x, pos.y);
-    var rect = editor.getBoundingClientRect();
-    pos.x = e.clientX - rect.left,
-    pos.y = e.clientY - rect.top
-    highlightContext.lineTo(pos.x, pos.y);
-
-    highlightContext.stroke();
   }
 
   setPosition(e) {
@@ -159,23 +153,18 @@ exports.Editor = class Editor extends React.Component {
     pos.y = e.clientY - rect.top
   }
 
-  resize() {
-    editor.width = window.innerWidth;
-    editor.height = window.innerHeight;
-  }
-
   draw(e) {
     if (e.buttons !== 1) return;
-    context.beginPath();
+    drawContext.beginPath();
 
-    context.lineCap = 'round';
-    context.moveTo(pos.x, pos.y);
+    drawContext.lineCap = 'round';
+    drawContext.moveTo(pos.x, pos.y);
     let rect = editor.getBoundingClientRect();
     pos.x = e.clientX - rect.left,
     pos.y = e.clientY - rect.top
-    context.lineTo(pos.x, pos.y);
+    drawContext.lineTo(pos.x, pos.y);
 
-    context.stroke();
+    drawContext.stroke();
   }
 }
 
