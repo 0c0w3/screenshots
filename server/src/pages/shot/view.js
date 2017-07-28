@@ -11,17 +11,10 @@ const reactruntime = require("../../reactruntime");
 class Clip extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      loading: true,
-      imageDisplay: "none"
-    };
   }
 
   componentDidMount() {
     let image = ReactDOM.findDOMNode(this.refs.clipImage);
-    if (image.complete) {
-      this.onImageLoaded();
-    }
     let onResize = () => {
       let windowHeight = window.innerHeight;
       let paddingTop = Math.floor((windowHeight - image.height - 35) / 2);
@@ -42,10 +35,7 @@ class Clip extends React.Component {
       console.warn("Somehow there's a shot without an image");
       return null;
     }
-    let node = <img id="clipImage" style={{height: "auto", width: clip.image.dimensions.x + "px", maxWidth: "100%", display: this.state.imageDisplay}} ref="clipImage" src={ clip.image.url } alt={ clip.image.text } onLoad = { this.onImageLoaded.bind(this) } />;
-    // Note that in server/src/pages/shot/page.js there is also JavaScript defined
-    // that displays the image onload, as a backup to make sure the image always
-    // gets displayed even if the bundle doesn't load
+    let node = <img id="clipImage" style={{height: "auto", width: clip.image.dimensions.x + "px", maxWidth: "100%"}} ref="clipImage" src={ clip.image.url } alt={ clip.image.text } />;
     return <div ref="clipContainer" className="clip-container">
       { this.copyTextContextMenu() }
       { this.renderLoader() }
@@ -53,13 +43,6 @@ class Clip extends React.Component {
         { node }
       </a>
     </div>;
-  }
-
-  onImageLoaded() {
-    this.setState({
-      loading: false,
-      imageDisplay: "inline"
-    });
   }
 
   renderLoader() {
